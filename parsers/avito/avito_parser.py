@@ -12,6 +12,11 @@ from .invalid import InvalidGetHTML
 from .invalid import InvalidGetSoup
 from .invalid import InvalidHasNextPage
 from .invalid import InvalidGetLinksList
+from .invalid import InvalidGetDataFromLink
+from .invalid import InvalidGetPrice
+from .invalid import InvalidGetAddress
+from .invalid import InvalidGetPhoneNumber
+from .invalid import InvalidGetLinksFromCSV
 
 
 class AvitoParser:
@@ -21,13 +26,11 @@ class AvitoParser:
         self.search_query = search_query
 
     def create_keywords(self):
-        keywords = {
-            'page': self.page,
-            'location': self.location,
-            'search_query': self.search_query
+        return {
+            'page': str(self.page),
+            'location': str(self.location),
+            'search_query': str(self.search_query)
         }
-
-        return keywords
 
     @staticmethod
     def get_desktop_html(url) -> str:
@@ -45,7 +48,7 @@ class AvitoParser:
             'user-agent': UserAgent().random,
         }
 
-        time.sleep(random(1, 2))
+        time.sleep(2)
 
         try:
             return requests.get(url, headers=header).text
@@ -69,7 +72,7 @@ class AvitoParser:
             'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1',
         }
 
-        time.sleep(random(1, 2))
+        time.sleep(2)
 
         try:
             return requests.get(url, headers=header).text
@@ -81,7 +84,7 @@ class AvitoParser:
     def get_soup(html):
         try:
             return BeautifulSoup(html, 'lxml')
-        except InvalidGetSoup as ex:
+        except InvalidGetSoup:
             print(f"Error getting soup of the html")
 
     @staticmethod
@@ -102,27 +105,108 @@ class AvitoParser:
         except InvalidGetLinksList:
             print(f"Error getting list of links with soup: {soup}")
 
-    def get_data_from_link(self):
-        pass
+    @staticmethod
+    def get_address(soup):
+        try:
+            first_address = soup.find('span', {'itemprop': 'name'}).text.strip()
+            second_address = soup.find('span', {'class': 'item-map-address'}).text.strip()
+            return ', '.join((first_address, second_address))
+        except InvalidGetAddress:
+            return ' '
 
-    def get_address(self):
-        pass
+    @staticmethod
+    def get_price(price):
+        try:
+            return ''.join(re.findall(r'\d+', price))
+        except InvalidGetPrice:
+            return ' '
 
-    def get_price(self):
-        pass
-
+    @staticmethod
     def get_phone_number(self):
-        pass
+        try:
+            return ''.join(re.findall(r'\d+', soup.find('a', {'href': re.compile('tel:')}).get('href')))
+        except InvalidGetPhoneNumber:
+            return ' '
 
-    def get_links_from_csv(self):
-        pass
+    @staticmethod
+    def get_data_from_link(soup):
+        try:
+            name = soup.find('span', {'class': 'title-info-title-text'}).text.strip()
+        except InvalidGetDataFromLink:
+            name = ' '
 
-    def write_data_to_csv(self):
-        pass
+        try:
+            price = get_price(soup.find('span', {'class': 'js-item-price'}).text.strip())
+        except InvalidGetDataFromLink:
+            price = ''
+
+        try:
+            seller = soup.find('div', {'class': 'seller-info-name js-seller-info-name'}).find('a').text.strip()
+        except InvalidGetDataFromLink:
+            seller = ''
+
+        try:
+            address = get_address(soup.find('div', {'class': 'item-map-location'}))
+        except InvalidGetDataFromLink:
+            address = ''
+
+        try:
+            description = soup.find('div', {'class': 'item-description-text'}).find('p').text.strip()
+        except InvalidGetDataFromLink:
+            description = ''
+
+        return {
+            'name': name,
+            'price': price,
+            'seller': seller,
+            'address': address,
+            'description': description,
+        }
+
+    @staticmethod
+    def get_links_from_csv(file):
+        data = list()
+
+        columns = (
+            'name',
+            'price',
+            'seller',
+            'phone_number',
+            'link',
+            'address',
+            'description',
+        )
+
+        try:
+            with open(file) as file:
+                try:
+                    reader = csv.DictReader(file, fieldnames=columns)
+                    for row in reader:
+                        data.append(row.get('link'))
+                finally:
+                    return data
+        except InvalidGetLinksFromCSV:
+            return data
+
+    @staticmethod
+    def write_data_to_csv(file, data):
+        columns = (
+            'name',
+            'price',
+            'seller',
+            'phone_number',
+            'link',
+            'address',
+            'description',
+        )
+
+        with open(file, 'a') as file:
+            writer = csv.DictWriter(file, fieldnames=columns)
+            writer.writerow(data)
 
 
 def main():
-    pass
+    parser = AvitoParser('1', 'moskva', 'oneplus')
 
 
 if __name__ == '__main__':
