@@ -9,6 +9,12 @@ verify_ssl = true
 bs4 = "*"
 fake-useragent = "*"
 requests = "*"
+lxml = "*"
+certifi = "*"
+chardet = "*"
+idna = "*"
+soupsieve = "*"
+urllib3 = "*"
 
 [requires]
 python_version = "3.8"

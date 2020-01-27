@@ -6,16 +6,16 @@ import time
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
-from .invalid import InvalidGetHTML
-from .invalid import InvalidGetSoup
-from .invalid import InvalidHasNextPage
-from .invalid import InvalidGetLinksList
-from .invalid import InvalidGetDataFromLink
-from .invalid import InvalidGetPrice
-from .invalid import InvalidGetAddress
-from .invalid import InvalidGetPhoneNumber
-from .invalid import InvalidGetLinksFromCSV
-from .invalid import InvalidDataUpdate
+from parsers.avito.invalid import InvalidGetHTML
+from parsers.avito.invalid import InvalidGetSoup
+from parsers.avito.invalid import InvalidHasNextPage
+from parsers.avito.invalid import InvalidGetLinksList
+from parsers.avito.invalid import InvalidGetDataFromLink
+from parsers.avito.invalid import InvalidGetPrice
+from parsers.avito.invalid import InvalidGetAddress
+from parsers.avito.invalid import InvalidGetPhoneNumber
+from parsers.avito.invalid import InvalidGetLinksFromCSV
+from parsers.avito.invalid import InvalidDataUpdate
 
 
 class AvitoParser:
@@ -23,6 +23,18 @@ class AvitoParser:
         self.page = page
         self.location = location
         self.search_query = search_query
+
+    @property
+    def get_page(self):
+        return self.page
+
+    @property
+    def get_location(self):
+        return self.location
+
+    @property
+    def get_search_query(self):
+        return self.search_query
 
     def create_keywords(self):
         return {
@@ -210,17 +222,17 @@ def main():
     file = 'avito.csv'
 
     url = f"https://www.avito.ru/" \
-          f"{KEYWORDS.get(location)}?" \
-          f"p={KEYWORDS.get(page)}&bt=1&" \
-          f"q={KEYWORDS.get(search_query)}"
+          f"{KEYWORDS.get(parser.location)}?" \
+          f"p={KEYWORDS.get(parser.page)}&bt=1&" \
+          f"q={KEYWORDS.get(parser.search_query)}"
 
-    links_csv = get_links_from_csv(file)
+    links_csv = parser.get_links_from_csv(file)
 
-    while has_next_page(get_soup(get_html(url))):
+    while parser.has_next_page(parser.get_soup(parser.get_desktop_html(url))):
         url = f"https://www.avito.ru/" \
-              f"{KEYWORDS.get(location)}?" \
-              f"p={KEYWORDS.get(page)}&bt=1&" \
-              f"q={KEYWORDS.get(search_query)}"
+              f"{KEYWORDS.get(parser.location)}?" \
+              f"p={KEYWORDS.get(parser.page)}&bt=1&" \
+              f"q={KEYWORDS.get(parser.search_query)}"
 
         KEYWORDS['page'] += 1
 
