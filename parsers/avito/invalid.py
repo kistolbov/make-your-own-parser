@@ -42,3 +42,7 @@ class InvalidGetLinksFromCSV(Exception):
     def __init__(self, *args, **kwargs):
         Exception.__init__(self, *args, **kwargs)
 
+
+class InvalidDataUpdate(Exception):
+    def __init__(self, *args, **kwargs):
+        Exception.__init__(self, *args, **kwargs)

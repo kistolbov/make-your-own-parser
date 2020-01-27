@@ -17,6 +17,7 @@ from .invalid import InvalidGetPrice
 from .invalid import InvalidGetAddress
 from .invalid import InvalidGetPhoneNumber
 from .invalid import InvalidGetLinksFromCSV
+from .invalid import InvalidDataUpdate
 
 
 class AvitoParser:
@@ -207,7 +208,42 @@ class AvitoParser:
 
 def main():
     parser = AvitoParser('1', 'ekaterinburg', 'lenovo')
+    KEYWORDS = parser.create_keywords()
+    file = 'avito.csv'
+
+    url = f"https://www.avito.ru/" \
+          f"{KEYWORDS.get(location)}?" \
+          f"p={KEYWORDS.get(page)}&bt=1&" \
+          f"q={KEYWORDS.get(search_query)}"
+
+    links_list = get_links_from_csv(file)
+
+    while has_next_page(get_soup(get_html(url))):
+        url = f"https://www.avito.ru/" \
+              f"{KEYWORDS.get(location)}?" \
+              f"p={KEYWORDS.get(page)}&bt=1&" \
+              f"q={KEYWORDS.get(search_query)}"
+
+        KEYWORDS['page'] += 1
+
+        links_list = get_links_list(get_soup(get_html(url)))
+
+        if links_list:
+            for link in links_list:
+                if link not in visited_links_list:
+                    data = dict()
+                    try:
+                        data.update(get_data_from_link(get_soup(get_html(link))))
+                        data['link'] = link
+                        data['phone_number'] = get_phone_number(get_soup(get_mobile_html(link)))
+                    except InvalidDataUpdate:
+                        continue
+
+                    if data['phone_number']:
+                        print(f'{len(visited_links_list) + 1}: {data.get("name")}\t{data.get("link")}')
+                        write_data_to_csv_file(file, data)
+                        visited_links_list.append(link)
 
 
 if __name__ == '__main__':
-    pass
+    main()
