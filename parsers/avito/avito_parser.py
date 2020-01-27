@@ -117,14 +117,14 @@ class AvitoParser:
     @staticmethod
     def get_price(price):
         try:
-            return ''.join(re.findall(r'\d+', price))
+            return ' '.join(re.findall(r'\d+', price))
         except InvalidGetPrice:
             return ' '
 
     @staticmethod
     def get_phone_number(self):
         try:
-            return ''.join(re.findall(r'\d+', soup.find('a', {'href': re.compile('tel:')}).get('href')))
+            return ' '.join(re.findall(r'\d+', soup.find('a', {'href': re.compile('tel:')}).get('href')))
         except InvalidGetPhoneNumber:
             return ' '
 
@@ -138,22 +138,22 @@ class AvitoParser:
         try:
             price = get_price(soup.find('span', {'class': 'js-item-price'}).text.strip())
         except InvalidGetDataFromLink:
-            price = ''
+            price = ' '
 
         try:
             seller = soup.find('div', {'class': 'seller-info-name js-seller-info-name'}).find('a').text.strip()
         except InvalidGetDataFromLink:
-            seller = ''
+            seller = ' '
 
         try:
             address = get_address(soup.find('div', {'class': 'item-map-location'}))
         except InvalidGetDataFromLink:
-            address = ''
+            address = ' '
 
         try:
             description = soup.find('div', {'class': 'item-description-text'}).find('p').text.strip()
         except InvalidGetDataFromLink:
-            description = ''
+            description = ' '
 
         return {
             'name': name,
@@ -206,7 +206,7 @@ class AvitoParser:
 
 
 def main():
-    parser = AvitoParser('1', 'moskva', 'oneplus')
+    parser = AvitoParser('1', 'ekaterinburg', 'lenovo')
 
 
 if __name__ == '__main__':
