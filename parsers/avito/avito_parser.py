@@ -214,7 +214,7 @@ def main():
           f"p={KEYWORDS.get(page)}&bt=1&" \
           f"q={KEYWORDS.get(search_query)}"
 
-    links_list = get_links_from_csv(file)
+    links_csv = get_links_from_csv(file)
 
     while has_next_page(get_soup(get_html(url))):
         url = f"https://www.avito.ru/" \
@@ -228,7 +228,7 @@ def main():
 
         if links_list:
             for link in links_list:
-                if link not in visited_links_list:
+                if link not in links_csv:
                     data = dict()
                     try:
                         data.update(get_data_from_link(get_soup(get_html(link))))
@@ -238,9 +238,9 @@ def main():
                         continue
 
                     if data['phone_number']:
-                        print(f'{len(visited_links_list) + 1}: {data.get("name")}\t{data.get("link")}')
+                        print(f'{len(links_csv) + 1}: {data.get("name")}\t{data.get("link")}')
                         write_data_to_csv_file(file, data)
-                        visited_links_list.append(link)
+                        links_csv.append(link)
 
 
 if __name__ == '__main__':
