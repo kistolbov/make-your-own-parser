@@ -1,11 +1,10 @@
 import csv
 import requests
-import time
 
 from bs4 import BeautifulSoup
-from fake_useragent import UserAgent
 
 from parsers.hh.invalid import InvalidStatusCode
+from parsers.hh.invalid import InvalidManyPages
 
 
 class HeadHunterParser:
@@ -18,23 +17,55 @@ class HeadHunterParser:
 
     def get_data(self):
         jobs = []
+        urls = [self.base_url]
         session = requests.Session()
         request = session.get(self.base_url, headers=self.headers)
-        soup = BeautifulSoup(request.content, 'html.parser')
+        soup = BeautifulSoup(request.content, 'lxml')
+        try:
+            pagination = soup.find_all('a', attrs={'data-qa': 'pager-page'})
+            page_quantity = int(pagination[-1].text)
+            for i in range(page_quantity):
+                url = f"https://ekaterinburg.hh.ru/search/vacancy?area=3&search_period=3&text=python&page={i}"
+                if url not in urls:
+                    urls.append(url)
+        except InvalidManyPages:
+            pass
         if request.status_code == 200:
-            print(200)
-            divs = soup.find_all('div', attrs={'data-qa': 'vacancy-serp__vacancy'})
-            for div in divs:
-                title = div.find('a', attrs={'data-qa': 'vacancy-serp__vacancy-title'}).text
-                jobs.append(title)
-            print(jobs)
+            for url in urls:
+                request = session.get(url, headers=self.headers)
+                soup = BeautifulSoup(request.content, 'lxml')
+                divs = soup.find_all('div', attrs={'data-qa': 'vacancy-serp__vacancy'})
+                for div in divs:
+                    title = div.find('a', attrs={'data-qa': 'vacancy-serp__vacancy-title'}).text
+                    href = div.find('a', attrs={'data-qa': 'vacancy-serp__vacancy-title'})['href']
+                    company = div.find('a', attrs={'data-qa': 'vacancy-serp__vacancy-employer'}).text
+                    first_text = div.find('div', attrs={'data-qa': 'vacancy-serp__vacancy_snippet_responsibility'}).text
+                    second_text = div.find('div', attrs={'data-qa': 'vacancy-serp__vacancy_snippet_requirement'}).text
+                    content = f"{first_text} {second_text}"
+                    jobs.append({
+                        'title': title,
+                        'href': href,
+                        'company': company,
+                        'content': content
+                    })
+
+            return jobs
         else:
             raise InvalidStatusCode(f"Invalid status code: {requests.status_codes}")
+
+    @staticmethod
+    def write_data_to_csv(jobs):
+        with open('headhunter.csv', 'a') as file:
+            pen = csv.writer(file)
+            pen.writerow(('title', 'url', 'company', 'description'))
+            for job in jobs:
+                pen.writerow((job['title'], job['href'], job['company'], job['content']))
 
 
 def main():
     parser = HeadHunterParser()
-    parser.get_data()
+    jobs = parser.get_data()
+    parser.write_data_to_csv(jobs)
 
 
 if __name__ == '__main__':
