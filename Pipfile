@@ -15,6 +15,7 @@ chardet = "*"
 idna = "*"
 soupsieve = "*"
 urllib3 = "*"
+twitter = "*"
 
 [requires]
 python_version = "3.8"

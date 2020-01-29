@@ -9,7 +9,7 @@ from parsers.hh.invalid import InvalidManyPages
 
 class HeadHunterParser:
     def __init__(self):
-        self.base_url = 'https://ekaterinburg.hh.ru/search/vacancy?area=3&search_period=3&text=python&page=0'
+        self.base_url = 'https://ekaterinburg.hh.ru/search/vacancy?area=3&search_period=3&text=data+science&page=0'
         self.headers = {
             'accept': '*/*',
             'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36'
@@ -28,7 +28,7 @@ class HeadHunterParser:
                 url = f"https://ekaterinburg.hh.ru/search/vacancy?area=3&search_period=3&text=python&page={i}"
                 if url not in urls:
                     urls.append(url)
-        except InvalidManyPages:
+        except IndexError:
             pass
         if request.status_code == 200:
             for url in urls:
