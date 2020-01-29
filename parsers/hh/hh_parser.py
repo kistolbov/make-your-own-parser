@@ -4,7 +4,6 @@ import requests
 from bs4 import BeautifulSoup
 
 from parsers.hh.invalid import InvalidStatusCode
-from parsers.hh.invalid import InvalidManyPages
 
 
 class HeadHunterParser:
