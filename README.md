@@ -1,7 +1,6 @@
 # Make Your Own Parser
 
-This project is a set of parsers that you can use both for yourself and for other needs. 
-Here I decided to collect my parsers that I wrote before.
+This project is a HeadHunter parser that you can use both for yourself and for other needs. 
 
 ## Description
 
